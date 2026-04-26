@@ -48,7 +48,8 @@ export function ActivityForm({ applicationId }: ActivityFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="space-y-1">
-        <label className="text-sm font-medium">Type</label>
+        <label className="text-xs uppercase tracking-wide text-muted-foreground">Type</label>
+
         <select
           value={type}
           onChange={(e) => setType(e.target.value as ActivityType)}
@@ -61,7 +62,8 @@ export function ActivityForm({ applicationId }: ActivityFormProps) {
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium">Date</label>
+        <label className="text-xs uppercase tracking-wide text-muted-foreground">Date</label>
+
         <input
           type="date"
           value={date}
@@ -71,7 +73,8 @@ export function ActivityForm({ applicationId }: ActivityFormProps) {
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium">Description</label>
+        <label className="text-xs uppercase tracking-wide text-muted-foreground">Description</label>
+
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
