@@ -10,9 +10,12 @@ export function useCreateApplication() {
 
   return useMutation({
     mutationFn: async (input: NewApplication) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      
       const { data, error } = await supabase
         .from('applications')
-        .insert(input)
+        .insert({ ...input, user_id: user.id })
         .select()
         .single()
       if (error) throw error
