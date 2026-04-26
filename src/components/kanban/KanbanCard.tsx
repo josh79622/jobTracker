@@ -11,12 +11,17 @@ import { ApplicationForm } from "@/components/applications/ApplicationForm"
 
 import { GripVertical } from "lucide-react"
 
+import { ApplicationDetail } from '@/components/applications/ApplicationDetail'
+
+
 interface KanbanCardProps {
   application: Application
 }
 
 export function KanbanCard({ application }: KanbanCardProps) {
   const [isApplicationDialogOpen, setApplicationDialogOpen] = useState(false)
+  const [isDetailOpen, setDetailOpen] = useState(false)
+
   const deleteApp = useDeleteApplication()
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: application.id })
@@ -45,7 +50,9 @@ export function KanbanCard({ application }: KanbanCardProps) {
             <GripVertical size={16} />
           </div>
           <div>
-            <div className="font-bold">{application.company}</div>
+            <button onClick={() => setDetailOpen(true)} className="font-bold hover:underline text-left">
+              {application.company}
+            </button>
             <div className="text-sm text-muted-foreground">{application.role}</div>
           </div>
         </div>
@@ -69,6 +76,8 @@ export function KanbanCard({ application }: KanbanCardProps) {
           <ApplicationForm onSubmit={() => setApplicationDialogOpen(false)} application={application}/>
         </DialogContent>
       </Dialog>
+
+      <ApplicationDetail applicationId={application.id} open={isDetailOpen} onOpenChange={setDetailOpen} />
     </div>
   )
 }
