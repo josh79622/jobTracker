@@ -44,40 +44,36 @@ export function KanbanCard({ application }: KanbanCardProps) {
 
   return (
     <div ref={setNodeRef} style={style} className="rounded-md border bg-background p-3 shadow-sm" {...attributes}>
-      <div className="flex items-start justify-between space-x-2">
-        <div className="flex items-center space-x-1 gap-1">
-          <div {...listeners} className="cursor-grab mt-0.5 text-muted-foreground">
-            <GripVertical size={16} />
-          </div>
-          <div>
-            <button onClick={() => setDetailOpen(true)} className="font-bold hover:underline text-left">
-              {application.company}
-            </button>
-            <div className="text-sm text-muted-foreground">{application.role}</div>
-          </div>
-        </div>
-
-        <div className="mt-2 flex gap-2">
-          <button onClick={() => setEditOpen(true)} className="text-xs text-blue-500 hover:text-blue-950">Edit</button>
-          <button onClick={handleDelete} className="text-xs text-red-500 hover:text-red-900">
-            Delete
-          </button>
-        </div>
-      </div>
-      
-
-      
-
-      <Dialog open={isApplicationDialogOpen} onOpenChange={setApplicationDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Application</DialogTitle>
-          </DialogHeader>
-          <ApplicationForm onSubmit={() => setApplicationDialogOpen(false)} application={application}/>
-        </DialogContent>
-      </Dialog>
-
-      <ApplicationDetail applicationId={application.id} open={isDetailOpen} onOpenChange={setDetailOpen} />
+  <div className="flex items-start gap-1 mb-2">
+    <div {...listeners} className="cursor-grab mt-0.5 text-muted-foreground shrink-0">
+      <GripVertical size={16} />
     </div>
+    <div className="min-w-0">
+      <button onClick={() => setDetailOpen(true)} className="font-bold hover:underline text-left text-sm truncate w-full block">
+        {application.company}
+      </button>
+      <div className="text-xs text-muted-foreground truncate">{application.role}</div>
+    </div>
+  </div>
+
+  <div className="flex gap-2 border-t pt-2 mt-1 justify-end">
+    <button onClick={() => setEditOpen(true)} className="text-xs text-blue-500 hover:text-blue-950">Edit</button>
+    <button onClick={handleDelete} className="text-xs text-red-500 hover:text-red-900">Delete</button>
+  </div>
+
+  <Dialog open={isApplicationDialogOpen} onOpenChange={setApplicationDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Create Application</DialogTitle>
+      </DialogHeader>
+      <ApplicationForm onSubmit={() => setApplicationDialogOpen(false)} application={application}/>
+    </DialogContent>
+  </Dialog>
+
+  <ApplicationDetail applicationId={application.id} open={isDetailOpen} onOpenChange={setDetailOpen} />
+</div>
+
   )
 }
+
+
