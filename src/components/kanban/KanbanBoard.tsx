@@ -1,13 +1,14 @@
+
 import { KANBAN_COLUMN_ORDER } from '@/lib/utils'
 import { KanbanColumn } from './KanbanColumn'
-import { useApplications } from '@/hooks/useApplications'
+import { useFilteredApplications } from '@/hooks/useFilteredApplications'
 
 import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { useUpdateApplication } from "@/hooks/useUpdateApplication"
 import type { ApplicationStatus } from '@/types/database'
 
 export function KanbanBoard() {
-  const { data: applications, isLoading } = useApplications()
+  const { data: applications, isLoading } = useFilteredApplications()
   const updateApplication = useUpdateApplication()
 
   function handleDragEnd(event: DragEndEvent) {
