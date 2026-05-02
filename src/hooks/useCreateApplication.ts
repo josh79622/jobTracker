@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Application } from '@/types/database'
 import { applicationsKey } from './useApplications'
+import { toast } from 'sonner'
+
 
 export type NewApplication = Omit<Application, 'id' | 'updated_at' | 'user_id'>
 
@@ -36,8 +38,13 @@ export function useCreateApplication() {
       ])
       return { prev }
     },
+    onSuccess: () => {
+      toast.success('Application created')
+    },
     onError: (_err, _input, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(applicationsKey, ctx.prev)
+      toast.error('Failed to create application')
+
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: applicationsKey })
