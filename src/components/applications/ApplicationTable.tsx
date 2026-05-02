@@ -9,12 +9,13 @@ import type { Application } from '@/types/database'
 
 import { useState, useEffect } from 'react'
 import { Pagination } from '@/components/ui/Pagination'
+import { ApplicationTableSkeleton } from "./ApplicationTableSkeleton"
 
 interface ApplicationTableProps {
   onEdit: (app: Application) => void
 }
 
-const COLUMNS: { label: string; field: SortField | null }[] = [
+export const COLUMNS: { label: string; field: SortField | null }[] = [
   { label: 'Company', field: 'company' },
   { label: 'Role', field: null },
   { label: 'Status', field: 'status' },
@@ -48,7 +49,7 @@ export function ApplicationTable({ onEdit }: ApplicationTableProps) {
     }
   }
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <ApplicationTableSkeleton />
 
   if (applications.length === 0)
     return <div className="text-muted-foreground py-12 text-center">No applications found.</div>
@@ -88,7 +89,12 @@ export function ApplicationTable({ onEdit }: ApplicationTableProps) {
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => deleteApplication.mutate(app.id)}
+                    disabled={deleteApplication.isPending && deleteApplication.variables === app.id}
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this application?')) {
+                        deleteApplication.mutate(app.id)
+                      }
+                    }}
                   >
                     Delete
                   </Button>

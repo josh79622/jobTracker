@@ -1,6 +1,5 @@
 import type { Application } from '@/types/database'
 import { useDeleteApplication } from "@/hooks/useDeleteApplication"
-import { toast } from "sonner"
 
 import { useDraggable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
@@ -31,10 +30,7 @@ export function KanbanCard({ application }: KanbanCardProps) {
 
   function handleDelete() {
     if (confirm('Are you sure you want to delete this application?')) {
-      deleteApp.mutate(application.id, {
-        onSuccess: () => toast.success('Application deleted successfully!'),
-        onError: () => toast.error('Failed to delete application.')
-      })
+      deleteApp.mutate(application.id)
     }
   }
   
@@ -58,7 +54,13 @@ export function KanbanCard({ application }: KanbanCardProps) {
 
   <div className="flex gap-2 border-t pt-2 mt-1 justify-end">
     <button onClick={() => setEditOpen(true)} className="text-xs text-blue-500 hover:text-blue-950">Edit</button>
-    <button onClick={handleDelete} className="text-xs text-red-500 hover:text-red-900">Delete</button>
+    <button 
+      onClick={handleDelete}
+      disabled={deleteApp.isPending && deleteApp.variables === application.id}
+      className="text-xs text-red-500 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Delete
+    </button>
   </div>
 
   <Dialog open={isApplicationDialogOpen} onOpenChange={setApplicationDialogOpen}>

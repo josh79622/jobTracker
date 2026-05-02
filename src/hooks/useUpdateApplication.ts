@@ -4,6 +4,9 @@ import type { Application } from '@/types/database'
 import { applicationsKey } from './useApplications'
 import { applicationKey } from './useApplication'
 
+import { toast } from 'sonner'
+
+
 export type ApplicationPatch = Partial<Omit<Application, 'id' | 'user_id'>> & {
   id: string
 }
@@ -41,10 +44,14 @@ export function useUpdateApplication() {
       }
       return { prevList, prevOne }
     },
+    onSuccess: () => {
+      toast.success('Application updated')
+    },
     onError: (_err, patch, ctx) => {
       if (ctx?.prevList) queryClient.setQueryData(applicationsKey, ctx.prevList)
       if (ctx?.prevOne)
         queryClient.setQueryData(applicationKey(patch.id), ctx.prevOne)
+      toast.error('Failed to update application')
     },
     onSettled: (_data, _err, patch) => {
       queryClient.invalidateQueries({ queryKey: applicationsKey })

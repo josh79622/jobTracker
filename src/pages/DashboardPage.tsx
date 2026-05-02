@@ -5,14 +5,32 @@ import { TimelineChart } from '@/components/analytics/TimelineChart'
 import { FunnelChart } from '@/components/analytics/FunnelChart'
 
 import { useApplications } from '@/hooks/useApplications'
+import { DashboardSkeleton } from "@/components/analytics/DashboardSkeleton"
 
 export default function DashboardPage() {
-  const { data: applications = [] } = useApplications()
+  const { data: applications = [], isLoading } = useApplications()
 
   const total = applications.length || 0
   const active = applications.filter(app => !['rejected', 'withdrawn'].includes(app.status)).length
   const interviews = applications.filter(app => app.status === 'interview').length
   const offers = applications.filter(app => app.status === 'offer').length
+
+  if (isLoading) {
+    return <AppLayout><DashboardSkeleton /></AppLayout>
+  }
+
+  if (applications.length === 0) {
+  return (
+    <AppLayout>
+      <div className="text-muted-foreground py-12 text-center">
+        <p>No data to display yet.</p>
+        <p className="text-sm mt-2">
+          Create your first application to see analytics.
+        </p>
+      </div>
+    </AppLayout>
+  )
+}
 
   return (
     <AppLayout>

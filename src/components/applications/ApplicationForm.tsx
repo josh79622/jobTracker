@@ -14,7 +14,6 @@ import {
   Select, SelectTrigger, SelectValue,
   SelectContent, SelectItem,
 } from '@/components/ui/select'
-import { toast } from "sonner"
 
 interface ApplicationFormProps {
   application?: Application
@@ -47,6 +46,8 @@ const getTodayString = () => {
 export function ApplicationForm(props: ApplicationFormProps) {
   const createApplication = useCreateApplication()
   const updateApplication = useUpdateApplication()
+
+  const isSubmitting = createApplication.isPending || updateApplication.isPending
 
   const { 
     register, 
@@ -87,22 +88,14 @@ export function ApplicationForm(props: ApplicationFormProps) {
     if (props.application) {
       updateApplication.mutate({ id: props.application.id, ...payload }, { 
         onSuccess: () => {
-          toast.success('Application updated successfully!')
           props.onSubmit?.(payload)
-        },
-        onError: () => {
-          toast.error('Failed to update application.')
         }
       })
     } else {
       createApplication.mutate(payload, { 
         onSuccess: () => {
-          toast.success('Application created successfully!')
           props.onSubmit?.(payload)
         },
-        onError: () => {
-          toast.error('Failed to create application.')
-        }
       })
     }
   }
@@ -184,7 +177,13 @@ export function ApplicationForm(props: ApplicationFormProps) {
         {errors.notes && <p style={{ color: 'red', margin: '4px 0 0' }}>{errors.notes.message}</p>}
       </div>
 
-      <Button type="submit" className="rounded-md bg-blue-600 px-4 py-2 text-white">Submit</Button>
+      <Button 
+        type="submit" 
+        className="rounded-md bg-blue-600 px-4 py-2 text-white"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Saving...' : 'Submit'}
+      </Button>
     </form>
   </div>
 }
