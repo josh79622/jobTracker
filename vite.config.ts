@@ -17,5 +17,18 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
-  }
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        'src/components/ui/',  // shadcn 不是我們寫的
+        'src/main.tsx',
+        'src/types/**',
+        '**/*.config.*',
+        '**/*.d.ts',
+      ],
+    },
+  },
 })
