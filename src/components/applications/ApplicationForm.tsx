@@ -129,7 +129,7 @@ export function ApplicationForm(props: ApplicationFormProps) {
           name="status"
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger id="FormStatus" className="w-full">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
