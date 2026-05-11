@@ -45,7 +45,7 @@ export function KanbanCard({ application }: KanbanCardProps) {
       <GripVertical size={16} />
     </div>
     <div className="min-w-0">
-      <button onClick={() => setDetailOpen(true)} className="font-bold hover:underline text-left text-sm truncate w-full block">
+      <button onClick={() => setDetailOpen(true)} className="font-bold hover:underline text-left text-sm truncate w-full block focus-visible:outline-none">
         {application.company}
       </button>
       <div className="text-xs text-muted-foreground truncate">{application.role}</div>
@@ -53,11 +53,11 @@ export function KanbanCard({ application }: KanbanCardProps) {
   </div>
 
   <div className="flex gap-2 border-t pt-2 mt-1 justify-end">
-    <button onClick={() => setEditOpen(true)} className="text-xs text-blue-500 hover:text-blue-950">Edit</button>
+    <button onClick={() => setEditOpen(true)} className="text-xs text-blue-500 hover:text-blue-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 rounded">Edit</button>
     <button 
       onClick={handleDelete}
       disabled={deleteApp.isPending && deleteApp.variables === application.id}
-      className="text-xs text-red-500 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="text-xs text-red-500 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-500 focus-visible:outline-offset-2 rounded"
     >
       Delete
     </button>

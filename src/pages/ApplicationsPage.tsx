@@ -51,12 +51,14 @@ export default function ApplicationsPage() {
       
       <div className="mb-4 flex gap-3">
         <Input
+          aria-label="Search applications"
           placeholder="Search company or role..."
           value={filters.search}
           onChange={(e) => updateFilters({ search: e.target.value })}
           className="max-w-xs"
         />
         <select
+          aria-label="Filter by status"
           value={filters.status?.[0] ?? ''}
           onChange={(e) => updateFilters({ status: e.target.value ? [e.target.value as any] : null })}
           className="rounded-md border border-gray-300 px-3 py-1 text-sm"
