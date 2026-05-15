@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Application } from '@/types/database'
 import { applicationsKey } from './useApplications'
+import { toast } from 'sonner'
+
 
 export function useDeleteApplication() {
   const queryClient = useQueryClient()
@@ -20,8 +22,12 @@ export function useDeleteApplication() {
       )
       return { prev }
     },
+    onSuccess: () => {
+      toast.success('Application deleted')
+    },
     onError: (_err, _id, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(applicationsKey, ctx.prev)
+      toast.error('Failed to delete application')
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: applicationsKey })

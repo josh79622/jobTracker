@@ -1,10 +1,5 @@
-export type ApplicationStatus =
-  | 'applied'
-  | 'phone_screen'
-  | 'interview'
-  | 'offer'
-  | 'rejected'
-  | 'withdrawn'
+export const APPLICATION_STATUSES = ['applied', 'phone_screen', 'interview', 'offer', 'rejected', 'withdrawn'] as const
+export type ApplicationStatus = typeof APPLICATION_STATUSES[number]
 
 export type ActivityType =
   | 'applied'

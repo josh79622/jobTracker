@@ -2,14 +2,15 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Skeleton } from '@/components/ui/skeleton'
-import ApplicationsPage from '@/pages/ApplicationsPage'
-import LoginPage from '@/pages/LoginPage'
-import SettingsPage from '@/pages/SettingsPage'
-import NotFoundPage from '@/pages/NotFoundPage'
+import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 
+const ApplicationsPage = lazy(() => import('@/pages/ApplicationsPage'))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
+const LoginPage = lazy(() => import('@/pages/LoginPage'))
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
-function DashboardFallback() {
+function PageFallback() {
   return (
     <div className="p-6 space-y-3">
       <Skeleton className="h-8 w-48" />
@@ -21,37 +22,39 @@ function DashboardFallback() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/applications" replace />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/applications"
-        element={
-          <ProtectedRoute>
-            <ApplicationsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Suspense fallback={<DashboardFallback />}>
-              <DashboardPage />
-            </Suspense>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <SettingsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <ErrorBoundary>
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/applications" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/applications"
+            element={
+              <ProtectedRoute>
+                <ApplicationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
