@@ -45,25 +45,27 @@ src/
 │   ├── layout/
 │   │   ├── AppLayout.tsx    # Main layout: sidebar + header + content
 │   │   ├── Sidebar.tsx      # Collapsible sidebar with nav + sign out
-│   │   ├── Header.tsx       # Top bar (stub)
-│   │   └── MobileNav.tsx    # Mobile hamburger menu (stub)
+│   │   ├── Header.tsx       # ✅ Working — top bar + mobile nav (Sheet hamburger)
+│   │   └── MobileNav.tsx    # ⚠️ STUB / unused — mobile nav lives in Header.tsx
 │   ├── kanban/
-│   │   ├── KanbanBoard.tsx  # Renders columns from KANBAN_COLUMN_ORDER
-│   │   ├── KanbanColumn.tsx # Single status column (stub — no cards yet)
-│   │   └── KanbanCard.tsx   # Application card (basic — needs DnD)
+│   │   ├── KanbanBoard.tsx  # ✅ Working — DnD board, columns from KANBAN_COLUMN_ORDER
+│   │   ├── KanbanColumn.tsx # ✅ Working — droppable status column (@dnd-kit)
+│   │   └── KanbanCard.tsx   # ✅ Working — draggable application card (@dnd-kit)
 │   ├── applications/
-│   │   ├── ApplicationForm.tsx   # ⚠️ STUB — needs full form implementation
-│   │   ├── ApplicationDetail.tsx # ⚠️ STUB — slide-out detail panel
-│   │   ├── ApplicationTable.tsx  # ⚠️ STUB — table/list view
+│   │   ├── ApplicationForm.tsx   # ✅ Working — Dialog form, create + edit modes
+│   │   ├── ApplicationDetail.tsx # ✅ Working — slide-out detail panel (Sheet)
+│   │   ├── ApplicationTable.tsx  # ✅ Working — table/list view + pagination
 │   │   └── StatusBadge.tsx       # ✅ Working — colour-coded status badge
 │   ├── analytics/
 │   │   ├── StatCard.tsx     # ✅ Working — single metric card
-│   │   ├── StatusChart.tsx  # ⚠️ STUB
-│   │   ├── TimelineChart.tsx # ⚠️ STUB
-│   │   └── FunnelChart.tsx  # ⚠️ STUB
+│   │   ├── StatusChart.tsx  # ✅ Working — Recharts status breakdown
+│   │   ├── TimelineChart.tsx # ✅ Working — Recharts applications over time
+│   │   └── FunnelChart.tsx  # ✅ Working — Recharts pipeline funnel
 │   ├── activity/
-│   │   ├── ActivityTimeline.tsx # ⚠️ STUB
-│   │   └── ActivityForm.tsx     # ⚠️ STUB
+│   │   ├── ActivityTimeline.tsx # ✅ Working — activity history list
+│   │   └── ActivityForm.tsx     # ✅ Working — add activity to an application
+│   ├── common/
+│   │   └── ErrorBoundary.tsx    # ✅ Working — top-level error boundary
 │   └── auth/
 │       ├── LoginForm.tsx     # ✅ Working — email/password sign in
 │       ├── SignupForm.tsx    # ✅ Working — registration with validation
@@ -87,10 +89,10 @@ src/
 │   ├── database.ts            # ✅ Hand-written types: Application, Contact, Activity, enums
 │   └── supabase.ts            # ✅ Auto-generated from Supabase CLI
 ├── pages/
-│   ├── ApplicationsPage.tsx   # ✅ Working — shows Kanban or Table view based on uiStore
-│   ├── DashboardPage.tsx      # Partially working — has StatCards but charts are stubs
+│   ├── ApplicationsPage.tsx   # ✅ Working — Kanban/Table view, search, filters, pagination
+│   ├── DashboardPage.tsx      # ✅ Working — StatCards + all analytics charts
 │   ├── LoginPage.tsx          # ✅ Working — tabs for Sign In / Sign Up
-│   ├── SettingsPage.tsx       # ⚠️ STUB
+│   ├── SettingsPage.tsx       # ⚠️ STUB — not yet implemented (not in original roadmap)
 │   └── NotFoundPage.tsx       # ✅ Working — 404 page
 ├── App.tsx                    # ✅ Working — routes with ProtectedRoute, lazy-loaded Dashboard
 └── main.tsx                   # ✅ Working — QueryClient, BrowserRouter, Toaster providers
@@ -146,43 +148,28 @@ src/
 
 ## Current Progress & What Needs To Be Done
 
-### ✅ Completed (Days 1-3)
-- Project scaffolded with all dependencies
-- Supabase database created with full schema, RLS, indexes, triggers
-- Auth flow working (sign up, sign in, sign out, session persistence, protected routes)
-- All data-fetching hooks implemented with TanStack Query
-- All mutation hooks implemented with optimistic updates
-- Zustand UI store working
-- Realtime subscription hook working
-- Basic page routing with lazy-loaded Dashboard
+### ✅ Completed (Days 1-14)
+- **Foundation:** Project scaffolded, Supabase DB with full schema/RLS/indexes/triggers, auth flow (sign up/in/out, session persistence, protected routes)
+- **Data layer:** All data-fetching + mutation hooks with TanStack Query and optimistic updates, Zustand UI store, realtime subscription hook
+- **Day 4 — CRUD:** ApplicationForm Dialog (create + edit modes, validation, toasts), Add/Edit/Delete wired into ApplicationsPage
+- **Day 5 — Kanban:** @dnd-kit drag-and-drop between status columns
+- **Day 6 — Detail:** ApplicationDetail slide-out (Sheet) + ActivityTimeline + ActivityForm
+- **Day 7 — Analytics:** Dashboard with Recharts (StatCards, StatusChart, TimelineChart, FunnelChart)
+- **Day 8 — Realtime/caching:** realtime sync + caching strategy
+- **Day 9 — List UX:** search, filters, pagination, table view
+- **Day 10 — Resilience:** ErrorBoundary, loading/skeleton states, toast notifications
+- **Day 11 — Testing:** Vitest + RTL unit/integration tests written (⚠️ see known issue below)
+- **Day 12 — A11y:** axe audit, keyboard nav, ARIA, responsive (mobile nav via Header Sheet)
+- **Day 13 — Perf/deploy:** React.lazy code-splitting, Lighthouse audit, deployed to Vercel
+- **Day 14 — Docs:** README + docs/SYSTEM_DESIGN.md
 
-### 🔧 Day 4: ApplicationForm + CRUD (CURRENT TASK)
-**ApplicationForm.tsx needs to be implemented as a Dialog form:**
-- Fields: company (required), role (required), url, status (Select dropdown), salary_min, salary_max, location, applied_date (default today), notes (textarea)
-- Use shadcn/ui Dialog, Input, Label, Select, Button components
-- Form validation: company and role required
-- Two modes: "create" (empty form) and "edit" (pre-filled with existing data)
-- On create: call `useCreateApplication` mutation
-- On edit: call `useUpdateApplication` mutation
-- Show success/error toasts via sonner
-- Close dialog on success
+### ⚠️ Known Gaps / Outstanding
+- **Test suite does not run** — `pnpm test:run` fails to start: jsdom@29's dependency `html-encoding-sniffer` does `require()` on an ESM-only package (`ERR_REQUIRE_ESM`) under Node 22 + vitest forks. Tests are written but currently unexecutable. Fix options: switch `environment` to `happy-dom`, downgrade jsdom, or inline the dep via `server.deps.inline`.
+- **SettingsPage.tsx is a stub** — renders only a heading; never scheduled in the original roadmap. Candidate content: account info + sign out, theme toggle (next-themes already installed), data export.
+- **MobileNav.tsx is an unused stub** — mobile navigation is actually implemented in Header.tsx via a Sheet; this file can be removed or implemented.
+- **next-themes** is installed but only consumed by the sonner wrapper — no theme switcher UI exists.
 
-**ApplicationsPage.tsx needs:**
-- An "Add Application" button that opens the ApplicationForm dialog
-- Display the list of applications (currently only renders KanbanBoard/ApplicationTable stubs)
-- Edit and delete buttons on each application card
-
-### 📋 Upcoming Days
-- Day 5: Kanban board with @dnd-kit drag-and-drop between status columns
-- Day 6: ApplicationDetail slide-out panel + ActivityTimeline
-- Day 7: Analytics dashboard with Recharts (StatCards, StatusChart, TimelineChart, FunnelChart)
-- Day 8: Realtime sync verification + caching strategy documentation
-- Day 9: Search, filters, pagination, table view
-- Day 10: Error boundaries, loading states, skeleton loaders, toast notifications
-- Day 11: Testing with Vitest + React Testing Library
-- Day 12: Accessibility (axe audit, keyboard navigation, ARIA) + responsive design
-- Day 13: Performance (React.lazy, Lighthouse audit) + deploy to Vercel
-- Day 14: README, system design doc, portfolio update
+> **Status:** The build passes (`pnpm build` green) and all core features are functional. Remaining items are the test-runner fix and the optional Settings page.
 
 ---
 
