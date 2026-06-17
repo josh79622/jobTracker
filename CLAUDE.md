@@ -64,6 +64,16 @@ src/
 │   ├── activity/
 │   │   ├── ActivityTimeline.tsx # ✅ Working — activity history list
 │   │   └── ActivityForm.tsx     # ✅ Working — add activity to an application
+│   ├── settings/
+│   │   ├── ProfileSection.tsx       # 🔲 TODO — display name + avatar upload
+│   │   ├── AppearanceSection.tsx    # 🔲 TODO — theme switcher (light/dark/system)
+│   │   ├── PreferencesSection.tsx   # 🔲 TODO — default location, salary, custom status labels
+│   │   ├── DataAccountSection.tsx   # 🔲 TODO — CSV/JSON export, delete account, logout
+│   │   ├── AvatarUpload.tsx         # 🔲 TODO — Supabase Storage upload with preview
+│   │   ├── ThemeSwitcher.tsx        # 🔲 TODO — 3-way toggle (light/dark/system)
+│   │   ├── StatusLabelEditor.tsx    # 🔲 TODO — editable status label mapping
+│   │   ├── ExportDataButton.tsx     # 🔲 TODO — download applications as CSV/JSON
+│   │   └── DeleteAccountDialog.tsx  # 🔲 TODO — confirmation modal for account deletion
 │   ├── common/
 │   │   └── ErrorBoundary.tsx    # ✅ Working — top-level error boundary
 │   └── auth/
@@ -79,20 +89,25 @@ src/
 │   ├── useDeleteApplication.ts # ✅ Working — mutation with optimistic update
 │   ├── useActivities.ts       # ✅ Working — fetches activities for an application
 │   ├── useContacts.ts         # ✅ Working — fetches contacts
-│   └── useRealtimeSubscription.ts # ✅ Working — invalidates queries on DB changes
+│   ├── useRealtimeSubscription.ts # ✅ Working — invalidates queries on DB changes
+│   ├── useUserPreferences.ts  # 🔲 TODO — TanStack Query hook for user_preferences CRUD
+│   └── useAvatarUpload.ts     # 🔲 TODO — Supabase Storage upload hook
 ├── stores/
-│   └── uiStore.ts             # ✅ Working — Zustand store for sidebar, view, filters, sort
+│   ├── uiStore.ts             # ✅ Working — Zustand store for sidebar, view, filters, sort
+│   └── themeStore.ts          # 🔲 TODO — Zustand store with persist middleware for theme preference
 ├── lib/
 │   ├── supabase.ts            # ✅ Working — singleton Supabase client
-│   └── utils.ts               # ✅ Working — cn(), formatDate(), STATUS_LABEL, STATUS_COLOR, KANBAN_COLUMN_ORDER
+│   ├── utils.ts               # ✅ Working — cn(), formatDate(), STATUS_LABEL, STATUS_COLOR, KANBAN_COLUMN_ORDER
+│   └── export.ts              # 🔲 TODO — CSV/JSON export utility functions
 ├── types/
 │   ├── database.ts            # ✅ Hand-written types: Application, Contact, Activity, enums
-│   └── supabase.ts            # ✅ Auto-generated from Supabase CLI
+│   ├── supabase.ts            # ✅ Auto-generated from Supabase CLI
+│   └── preferences.ts         # 🔲 TODO — TypeScript types for user_preferences
 ├── pages/
 │   ├── ApplicationsPage.tsx   # ✅ Working — Kanban/Table view, search, filters, pagination
 │   ├── DashboardPage.tsx      # ✅ Working — StatCards + all analytics charts
 │   ├── LoginPage.tsx          # ✅ Working — tabs for Sign In / Sign Up
-│   ├── SettingsPage.tsx       # ⚠️ STUB — not yet implemented (not in original roadmap)
+│   ├── SettingsPage.tsx       # 🔲 TODO — 4-section settings page (Profile, Appearance, Preferences, Data & Account)
 │   └── NotFoundPage.tsx       # ✅ Working — 404 page
 ├── App.tsx                    # ✅ Working — routes with ProtectedRoute, lazy-loaded Dashboard
 └── main.tsx                   # ✅ Working — QueryClient, BrowserRouter, Toaster providers
@@ -136,6 +151,22 @@ src/
 - `date` date (default: today)
 - `created_at` timestamptz
 
+**user_preferences** *(🔲 TODO — create via migration)*
+- `id` uuid PK (auto-generated)
+- `user_id` uuid FK → auth.users (unique — one row per user)
+- `display_name` text (nullable)
+- `avatar_url` text (nullable)
+- `default_location` text (nullable)
+- `default_salary_min` integer (nullable)
+- `default_salary_max` integer (nullable)
+- `custom_status_labels` jsonb (nullable — e.g. `{"phone_screen": "Initial Call"}`)
+- `theme` text (default: 'system' — light | dark | system)
+- `created_at` timestamptz (auto)
+- `updated_at` timestamptz (auto, trigger-updated)
+
+### Storage Buckets *(🔲 TODO)*
+- **avatars** — public read, authenticated upload, max 2MB, jpg/png/webp only
+
 ### Security
 - Row Level Security (RLS) enabled on all tables
 - All policies: users can only CRUD their own data (WHERE auth.uid() = user_id)
@@ -165,11 +196,11 @@ src/
 
 ### ⚠️ Known Gaps / Outstanding
 - **Test suite does not run** — `pnpm test:run` fails to start: jsdom@29's dependency `html-encoding-sniffer` does `require()` on an ESM-only package (`ERR_REQUIRE_ESM`) under Node 22 + vitest forks. Tests are written but currently unexecutable. Fix options: switch `environment` to `happy-dom`, downgrade jsdom, or inline the dep via `server.deps.inline`.
-- **SettingsPage.tsx is a stub** — renders only a heading; never scheduled in the original roadmap. Candidate content: account info + sign out, theme toggle (next-themes already installed), data export.
+- **SettingsPage.tsx is planned** — currently renders only a heading. Full implementation planned with 4 sections: Profile (avatar upload via Supabase Storage, display name), Appearance (theme switcher), Application Preferences (defaults + custom status labels), Data & Account (CSV/JSON export, delete account). See Settings Page Plan section below for full spec.
 - **MobileNav.tsx is an unused stub** — mobile navigation is actually implemented in Header.tsx via a Sheet; this file can be removed or implemented.
 - **next-themes** is installed but only consumed by the sonner wrapper — no theme switcher UI exists.
 
-> **Status:** The build passes (`pnpm build` green) and all core features are functional. Remaining items are the test-runner fix and the optional Settings page.
+> **Status:** The build passes (`pnpm build` green) and all core features are functional. Remaining items are the test-runner fix and the Settings page implementation.
 
 ---
 
@@ -187,6 +218,7 @@ src/
 ['activities', applicationId]       // activities for one application
 ['contacts']                        // all contacts
 ['contacts', applicationId]         // contacts for one application
+['user-preferences']                // current user's preferences (settings page)
 ```
 
 ### Optimistic Update Pattern (already implemented in hooks)
@@ -252,6 +284,54 @@ pnpm preview      # Preview production build
 8. **DO NOT edit files in src/components/ui/** — these are managed by shadcn
 9. **DO use existing Supabase client from src/lib/supabase.ts** — don't create new clients
 10. **DO use existing hooks** — useCreateApplication, useUpdateApplication, useDeleteApplication already have optimistic updates built in
+
+---
+
+## Settings Page Plan
+
+> **Goal:** Both practical and technically impressive. Estimated 3 days of development.
+
+### Section 1: Profile
+- Display user email (read-only, from Supabase Auth)
+- Editable display name field
+- Avatar upload using Supabase Storage
+  - Image preview before upload
+  - File size validation (max 2MB), accepted formats: jpg, png, webp
+  - Upload progress indicator
+- Save with optimistic update via TanStack Query `useUserPreferences` hook
+
+### Section 2: Appearance
+- Theme switcher: Light / Dark / System (3 options, radio group or segmented control)
+- Store preference in Zustand `themeStore` with `persist` middleware (localStorage)
+- Apply via Tailwind `dark:` class strategy (toggle `dark` class on `<html>`)
+- Respect `prefers-color-scheme` media query when "System" is selected
+- Note: `next-themes` is installed but consider replacing with custom Zustand approach for consistency
+
+### Section 3: Application Preferences
+- Default location for new applications (text input)
+- Default salary range (min/max number inputs)
+- Custom status labels (editable mapping, e.g. rename "Phone Screen" → "Initial Call")
+- Data stored in `user_preferences` table in Supabase (see Database Schema section)
+- ApplicationForm should read these defaults when opening in create mode
+
+### Section 4: Data & Account
+- **Export:** download all applications as CSV or JSON (frontend-only via Blob + URL.createObjectURL)
+- **Danger Zone** (red-bordered section):
+  - Delete account button → confirmation modal (user types email to confirm)
+  - Deletes all user data via Supabase, then signs out
+- Logout button
+
+### Implementation Schedule
+- **Day 1:** Profile (avatar upload with Supabase Storage, display name) + Appearance (theme switcher with Zustand persist)
+- **Day 2:** Application Preferences (user_preferences migration, custom status labels, default values) + Data export (CSV/JSON)
+- **Day 3:** Danger Zone (delete account flow) + responsive layout + loading/error states + polish
+
+### Interview Talking Points from Settings Page
+- **Supabase Storage:** file upload flow — client-side validation, signed URLs, public bucket config
+- **Zustand persist middleware:** trade-offs of localStorage sync vs server-side preference storage
+- **CSV export:** frontend data transformation using Blob API without server dependency
+- **Danger Zone UX:** destructive action patterns — why double confirmation matters, red visual cues
+- **Optimistic updates:** settings changes feel instant while syncing to Supabase in the background
 
 ---
 
