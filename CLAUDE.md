@@ -189,13 +189,19 @@ src/
 - **Day 8 — Realtime/caching:** realtime sync + caching strategy
 - **Day 9 — List UX:** search, filters, pagination, table view
 - **Day 10 — Resilience:** ErrorBoundary, loading/skeleton states, toast notifications
-- **Day 11 — Testing:** Vitest + RTL unit/integration tests written (⚠️ see known issue below)
+- **Day 11 — Testing:** Vitest + RTL unit/integration tests — ✅ 8 test files / 18 tests passing (see "Resolved" note about the Node runtime fix)
 - **Day 12 — A11y:** axe audit, keyboard nav, ARIA, responsive (mobile nav via Header Sheet)
 - **Day 13 — Perf/deploy:** React.lazy code-splitting, Lighthouse audit, deployed to Vercel
 - **Day 14 — Docs:** README + docs/SYSTEM_DESIGN.md
 
-### ⚠️ Known Gaps / Outstanding
-- **Test suite does not run** — `pnpm test:run` fails to start: jsdom@29's dependency `html-encoding-sniffer` does `require()` on an ESM-only package (`ERR_REQUIRE_ESM`) under Node 22 + vitest forks. Tests are written but currently unexecutable. Fix options: switch `environment` to `happy-dom`, downgrade jsdom, or inline the dep via `server.deps.inline`.
+### ✅ Resolved
+- **Test suite now runs (2026-06-17)** — `pnpm test:run` → 8 files / 18 tests passing.
+  - **Symptom:** every test file failed at worker startup with `ERR_REQUIRE_ESM`.
+  - **Root cause:** the runtime, not the code. `jsdom@29` → `html-encoding-sniffer@6` does `require()` on `@exodus/bytes`, which is ESM-only (`"type": "module"`). On **Node 22.11** `require()` of an ESM module is not enabled, so jsdom failed to load inside each vitest forks worker. The latest versions of all three packages still have this `require(ESM)` shape, so upgrading the npm packages does NOT help.
+  - **Fix:** upgraded Node **22.11 → 22.12.0**, where `require(ESM)` is enabled by default (it was flag-gated behind `--experimental-require-module` before 22.12). No dependency or `vite.config.ts` changes — jsdom kept as-is.
+  - **Locked the version** so it can't regress: added `.nvmrc` (`22.12.0`) for local dev and `engines.node >= 22.12.0` in `package.json` for install/CI enforcement.
+  - **Interview talking points:** (1) debugging a failure that lived in the *runtime/dependency* layer, not app code — read the actual error chain instead of guessing; (2) the CJS-vs-ESM `require(ESM)` interop change in Node 22.12; (3) why "just upgrade the package" was the wrong instinct here (latest versions still broken); (4) `.nvmrc` vs `engines` — dev-experience hint vs install-time contract — for reproducibility across machines and CI.
+  - **How I found it (the story to tell):** AI's first suggestions were workarounds — switch to happy-dom, downgrade jsdom, or inline the dep. They worked but didn't feel like the *best* solution (each swaps or weakens a dependency to dodge the symptom). Instead of accepting the first fix, I questioned it and asked "why can't we just upgrade the version and see if it's already fixed?" Investigating that question surfaced the real root cause — a Node runtime gap, not a library bug — and the cleanest fix: a one-minor-version Node upgrade with zero code changes. **Lesson: don't accept the first workaround; push to understand the root cause, and the least-invasive fix often falls out of it.**
 - **SettingsPage.tsx is planned** — currently renders only a heading. Full implementation planned with 4 sections: Profile (avatar upload via Supabase Storage, display name), Appearance (theme switcher), Application Preferences (defaults + custom status labels), Data & Account (CSV/JSON export, delete account). See Settings Page Plan section below for full spec.
 - **MobileNav.tsx is an unused stub** — mobile navigation is actually implemented in Header.tsx via a Sheet; this file can be removed or implemented.
 - **next-themes** is installed but only consumed by the sonner wrapper — no theme switcher UI exists.
