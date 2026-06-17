@@ -328,6 +328,12 @@ pnpm preview      # Preview production build
 - Logout button
 
 ### Implementation Schedule
+- **Day 0 (~half day): Adopt Supabase CLI — migrate from Dashboard-managed schema to migrations-as-code.** Prereq for the rest: from here on all schema/RLS/storage changes are version-controlled SQL migrations, not manual Dashboard clicks.
+  - Install CLI via Homebrew (`brew install supabase/tap/supabase`), `supabase init`, `supabase login`, `supabase link --project-ref <ref>`.
+  - `supabase db pull` → capture the existing remote schema (applications / contacts / activities + RLS) as a baseline migration in `supabase/migrations/`.
+  - `supabase gen types typescript --linked > src/types/supabase.ts` → auto-generate types instead of hand-maintaining them.
+  - Workflow: `supabase migration new <name>` → write SQL → `supabase db push`. (Remote-direct chosen over local-first/Docker for a solo project; local Docker DB can be added later if needed.)
+  - **Interview story:** migrating a Dashboard-managed project to a migrations-based, schema-as-code workflow — reproducibility, schema changes visible in PR diffs, automated type generation.
 - **Day 1:** Profile (avatar upload with Supabase Storage, display name) + Appearance (theme switcher with Zustand persist)
 - **Day 2:** Application Preferences (user_preferences migration, custom status labels, default values) + Data export (CSV/JSON)
 - **Day 3:** Danger Zone (delete account flow) + responsive layout + loading/error states + polish
