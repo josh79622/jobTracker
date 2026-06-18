@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { Monitor, Moon, Sun } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -11,16 +10,11 @@ const OPTIONS = [
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  // next-themes only knows the real theme on the client. Wait for mount so we
-  // don't render the wrong active button on first paint.
-  useEffect(() => setMounted(true), [])
 
   return (
     <div role="radiogroup" aria-label="Theme" className="inline-flex rounded-lg border bg-muted p-1">
       {OPTIONS.map(({ value, label, icon: Icon }) => {
-        const active = mounted && theme === value
+        const active = theme === value
         return (
           <button
             key={value}
