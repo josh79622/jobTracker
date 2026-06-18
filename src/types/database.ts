@@ -45,3 +45,17 @@ export interface Activity {
   date: string
   user_id: string
 }
+
+export interface UserPreferences {
+  id: string
+  user_id: string
+  display_name: string | null
+  avatar_url: string | null
+  default_location: string | null
+  default_salary_min: number | null
+  default_salary_max: number | null
+  custom_status_labels: Record<string, string> | null
+  theme: string
+  created_at: string
+  updated_at: string
+}

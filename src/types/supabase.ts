@@ -169,6 +169,48 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          custom_status_labels: Json | null
+          default_location: string | null
+          default_salary_max: number | null
+          default_salary_min: number | null
+          display_name: string | null
+          id: string
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          custom_status_labels?: Json | null
+          default_location?: string | null
+          default_salary_max?: number | null
+          default_salary_min?: number | null
+          display_name?: string | null
+          id?: string
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          custom_status_labels?: Json | null
+          default_location?: string | null
+          default_salary_max?: number | null
+          default_salary_min?: number | null
+          display_name?: string | null
+          id?: string
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

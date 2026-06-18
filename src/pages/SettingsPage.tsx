@@ -1,4 +1,5 @@
 import { AppLayout } from '@/components/layout/AppLayout'
+import { ProfileSection } from '@/components/settings/ProfileSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
 
 export default function SettingsPage() {
@@ -9,6 +10,7 @@ export default function SettingsPage() {
           <h1 className="text-2xl font-semibold">Settings</h1>
           <p className="text-muted-foreground">Manage your account and preferences.</p>
         </div>
+        <ProfileSection />
         <AppearanceSection />
       </div>
     </AppLayout>
