@@ -4,6 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useCreateApplication } from "@/hooks/useCreateApplication"
 import { useUpdateApplication } from "@/hooks/useUpdateApplication"
+import { useUserPreferences } from "@/hooks/useUserPreferences"
+import { useStatusLabel } from "@/hooks/useStatusLabel"
+
 import { APPLICATION_STATUSES } from '@/types/database'
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
@@ -39,21 +42,24 @@ const getTodayString = () => {
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0');
   const day = String(today.getDate()).padStart(2, '0');
-  
+
   return `${year}-${month}-${day}`; // 產出如 "2023-10-25"
 };
 
 export function ApplicationForm(props: ApplicationFormProps) {
   const createApplication = useCreateApplication()
   const updateApplication = useUpdateApplication()
+  const { data: prefs } = useUserPreferences()
+  const getStatusLabel = useStatusLabel()
 
   const isSubmitting = createApplication.isPending || updateApplication.isPending
 
-  const { 
-    register, 
-    handleSubmit, 
+  const {
+    register,
+    handleSubmit,
     control,
-    formState: { errors }, 
+    setValue,
+    formState: { errors },
   } = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationSchema),
     defaultValues: props.application ? {
@@ -72,6 +78,20 @@ export function ApplicationForm(props: ApplicationFormProps) {
     }
   });
 
+  // Only offer this in create mode, and only if the user actually saved defaults
+  const hasDefaults =
+    !props.application &&
+    !!prefs &&
+    (prefs.default_location != null ||
+      prefs.default_salary_min != null ||
+      prefs.default_salary_max != null)
+
+  const applyDefaults = () => {
+    if (prefs?.default_location != null) setValue('location', prefs.default_location)
+    if (prefs?.default_salary_min != null) setValue('salary_min', prefs.default_salary_min)
+    if (prefs?.default_salary_max != null) setValue('salary_max', prefs.default_salary_max)
+  }
+
   function onSubmit(values: ApplicationFormValues) {
     const payload = {
     company: values.company,
@@ -86,13 +106,13 @@ export function ApplicationForm(props: ApplicationFormProps) {
   }
 
     if (props.application) {
-      updateApplication.mutate({ id: props.application.id, ...payload }, { 
+      updateApplication.mutate({ id: props.application.id, ...payload }, {
         onSuccess: () => {
           props.onSubmit?.(payload)
         }
       })
     } else {
-      createApplication.mutate(payload, { 
+      createApplication.mutate(payload, {
         onSuccess: () => {
           props.onSubmit?.(payload)
         },
@@ -102,6 +122,12 @@ export function ApplicationForm(props: ApplicationFormProps) {
 
   return <div data-slot="application-form">
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {hasDefaults && (
+        <Button type="button" variant="outline" size="sm" onClick={applyDefaults}>
+          Use my defaults
+        </Button>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="FormCompany" className="block text-sm font-medium text-gray-700">Company</Label>
         <Input id="FormCompany" {...register('company')} className="w-full rounded-md border border-gray-300 px-3 py-2" />
@@ -112,7 +138,7 @@ export function ApplicationForm(props: ApplicationFormProps) {
       <div className="space-y-2">
         <Label htmlFor="FormRole" className="block text-sm font-medium text-gray-700">Role</Label>
         <Input id="FormRole" {...register('role')} className="w-full rounded-md border border-gray-300 px-3 py-2" />
-        
+
         {errors.role && <p style={{ color: 'red', margin: '4px 0 0' }}>{errors.role.message}</p>}
       </div>
 
@@ -132,13 +158,12 @@ export function ApplicationForm(props: ApplicationFormProps) {
               <SelectTrigger id="FormStatus" className="w-full">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="applied">Applied</SelectItem>
-                <SelectItem value="phone_screen">Phone Screen</SelectItem>
-                <SelectItem value="interview">Interview</SelectItem>
-                <SelectItem value="offer">Offer</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-                <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                            <SelectContent>
+                {APPLICATION_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {getStatusLabel(s)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
@@ -177,8 +202,8 @@ export function ApplicationForm(props: ApplicationFormProps) {
         {errors.notes && <p style={{ color: 'red', margin: '4px 0 0' }}>{errors.notes.message}</p>}
       </div>
 
-      <Button 
-        type="submit" 
+      <Button
+        type="submit"
         className="rounded-md bg-blue-600 px-4 py-2 text-white"
         disabled={isSubmitting}
       >

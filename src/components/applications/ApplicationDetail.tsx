@@ -1,6 +1,6 @@
 import { useApplication } from '@/hooks/useApplication'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { STATUS_LABEL } from "@/lib/utils"
+import { useStatusLabel } from '@/hooks/useStatusLabel'
 import { ActivityTimeline } from '@/components/activity/ActivityTimeline'
 
 import { ActivityForm } from '@/components/activity/ActivityForm'
@@ -12,6 +12,7 @@ interface ApplicationDetailProps {
 }
 
 export function ApplicationDetail({ applicationId, open, onOpenChange }: ApplicationDetailProps) {
+  const getStatusLabel = useStatusLabel()
 
   const { data: application, isLoading } = useApplication(applicationId)
 
@@ -29,7 +30,7 @@ export function ApplicationDetail({ applicationId, open, onOpenChange }: Applica
           <div className="mt-2 space-y-4">
             <div>
               <span className="text-xs uppercase tracking-wide text-muted-foreground">Status</span>
-              <p className="text-sm font-medium">{STATUS_LABEL[application.status]}</p>
+              <p className="text-sm font-medium">{getStatusLabel(application.status)}</p>
             </div>
 
             {application.location && (

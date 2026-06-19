@@ -1,6 +1,10 @@
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProfileSection } from '@/components/settings/ProfileSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
+import { PreferencesSection } from '@/components/settings/PreferencesSection'
+import { StatusLabelEditor } from '@/components/settings/StatusLabelEditor'
+import { ExportDataButton } from '@/components/settings/ExportDataButton'
+
 
 export default function SettingsPage() {
   return (
@@ -11,7 +15,10 @@ export default function SettingsPage() {
           <p className="text-muted-foreground">Manage your account and preferences.</p>
         </div>
         <ProfileSection />
+        <PreferencesSection />
+        <StatusLabelEditor />
         <AppearanceSection />
+        <ExportDataButton />
       </div>
     </AppLayout>
   )
