@@ -41,3 +41,10 @@ export const KANBAN_COLUMN_ORDER: ApplicationStatus[] = [
   'offer',
   'rejected',
 ]
+
+export function getStatusLabel(
+  status: ApplicationStatus,
+  custom?: Record<string, string> | null,
+): string {
+  return custom?.[status]?.trim() || STATUS_LABEL[status]
+}

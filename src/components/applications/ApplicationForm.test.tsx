@@ -20,6 +20,16 @@ vi.mock('@/hooks/useUpdateApplication', () => ({
   })
 }))
 
+// ApplicationForm now reads preferences (for "Use my defaults") and resolves
+// status labels — mock both so the test needs no QueryClient/supabase.
+vi.mock('@/hooks/useUserPreferences', () => ({
+  useUserPreferences: () => ({ data: null, isLoading: false }),
+}))
+vi.mock('@/hooks/useStatusLabel', async () => {
+  const { getStatusLabel } = await vi.importActual<typeof import('@/lib/utils')>('@/lib/utils')
+  return { useStatusLabel: () => getStatusLabel }
+})
+
 describe('ApplicationForm', () => {
 
   beforeEach(() => {

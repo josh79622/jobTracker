@@ -9,6 +9,13 @@ vi.mock('@/hooks/useCreateApplication', () => ({
 vi.mock('@/hooks/useUpdateApplication', () => ({
   useUpdateApplication: () => ({ mutate: vi.fn(), isPending: false }),
 }))
+vi.mock('@/hooks/useUserPreferences', () => ({
+  useUserPreferences: () => ({ data: null, isLoading: false }),
+}))
+vi.mock('@/hooks/useStatusLabel', async () => {
+  const { getStatusLabel } = await vi.importActual<typeof import('@/lib/utils')>('@/lib/utils')
+  return { useStatusLabel: () => getStatusLabel }
+})
 
 describe('ApplicationForm a11y', () => {
   it('has no detectable accessibility violations', async () => {
