@@ -15,11 +15,6 @@ function downloadBlob(content: string, filename: string, type: string) {
   URL.revokeObjectURL(url) // release the object URL to avoid a memory leak
 }
 
-export function exportApplicationsAsJson(applications: Application[]) {
-  const content = JSON.stringify(applications, null, 2)
-  downloadBlob(content, `applications-${todayStamp()}.json`, 'application/json')
-}
-
 const CSV_COLUMNS: (keyof Application)[] = [
   'company',
   'role',
@@ -42,11 +37,26 @@ function escapeCsv(value: unknown): string {
   return str
 }
 
-export function exportApplicationsAsCsv(applications: Application[]) {
+// --- Pure transforms (unit-tested) ---
+
+export function applicationsToCsv(applications: Application[]): string {
   const header = CSV_COLUMNS.join(',')
   const rows = applications.map((app) =>
     CSV_COLUMNS.map((col) => escapeCsv(app[col])).join(','),
   )
-  const content = [header, ...rows].join('\n')
-  downloadBlob(content, `applications-${todayStamp()}.csv`, 'text/csv;charset=utf-8')
+  return [header, ...rows].join('\n')
+}
+
+export function applicationsToJson(applications: Application[]): string {
+  return JSON.stringify(applications, null, 2)
+}
+
+// --- Download wrappers (side effects) ---
+
+export function exportApplicationsAsCsv(applications: Application[]) {
+  downloadBlob(applicationsToCsv(applications), `applications-${todayStamp()}.csv`, 'text/csv;charset=utf-8')
+}
+
+export function exportApplicationsAsJson(applications: Application[]) {
+  downloadBlob(applicationsToJson(applications), `applications-${todayStamp()}.json`, 'application/json')
 }

@@ -4,6 +4,7 @@ import { AppearanceSection } from '@/components/settings/AppearanceSection'
 import { PreferencesSection } from '@/components/settings/PreferencesSection'
 import { StatusLabelEditor } from '@/components/settings/StatusLabelEditor'
 import { ExportDataButton } from '@/components/settings/ExportDataButton'
+import { DataAccountSection } from '@/components/settings/DataAccountSection'
 
 
 export default function SettingsPage() {
@@ -19,6 +20,7 @@ export default function SettingsPage() {
         <StatusLabelEditor />
         <AppearanceSection />
         <ExportDataButton />
+        <DataAccountSection />
       </div>
     </AppLayout>
   )

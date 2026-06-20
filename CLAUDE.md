@@ -65,15 +65,15 @@ src/
 │   │   ├── ActivityTimeline.tsx # ✅ Working — activity history list
 │   │   └── ActivityForm.tsx     # ✅ Working — add activity to an application
 │   ├── settings/
-│   │   ├── ProfileSection.tsx       # 🔲 TODO — display name + avatar upload
-│   │   ├── AppearanceSection.tsx    # 🔲 TODO — theme switcher (light/dark/system)
-│   │   ├── PreferencesSection.tsx   # 🔲 TODO — default location, salary, custom status labels
-│   │   ├── DataAccountSection.tsx   # 🔲 TODO — CSV/JSON export, delete account, logout
-│   │   ├── AvatarUpload.tsx         # 🔲 TODO — Supabase Storage upload with preview
-│   │   ├── ThemeSwitcher.tsx        # 🔲 TODO — 3-way toggle (light/dark/system)
-│   │   ├── StatusLabelEditor.tsx    # 🔲 TODO — editable status label mapping
-│   │   ├── ExportDataButton.tsx     # 🔲 TODO — download applications as CSV/JSON
-│   │   └── DeleteAccountDialog.tsx  # 🔲 TODO — confirmation modal for account deletion
+│   │   ├── ProfileSection.tsx       # ✅ Working — email (read-only) + display name + avatar upload
+│   │   ├── AppearanceSection.tsx    # ✅ Working — wraps ThemeSwitcher
+│   │   ├── PreferencesSection.tsx   # ✅ Working — default location + salary range
+│   │   ├── DataAccountSection.tsx   # ✅ Working — logout + Danger Zone (delete account)
+│   │   ├── AvatarUpload.tsx         # ✅ Working — Supabase Storage upload with preview + validation
+│   │   ├── ThemeSwitcher.tsx        # ✅ Working — 3-way toggle via next-themes (light/dark/system)
+│   │   ├── StatusLabelEditor.tsx    # ✅ Working — editable status label mapping → user_preferences
+│   │   ├── ExportDataButton.tsx     # ✅ Working — download applications as CSV/JSON (Blob)
+│   │   └── DeleteAccountDialog.tsx  # ✅ Working — type-email-to-confirm modal for account deletion
 │   ├── common/
 │   │   └── ErrorBoundary.tsx    # ✅ Working — top-level error boundary
 │   └── auth/
@@ -90,24 +90,26 @@ src/
 │   ├── useActivities.ts       # ✅ Working — fetches activities for an application
 │   ├── useContacts.ts         # ✅ Working — fetches contacts
 │   ├── useRealtimeSubscription.ts # ✅ Working — invalidates queries on DB changes
-│   ├── useUserPreferences.ts  # 🔲 TODO — TanStack Query hook for user_preferences CRUD
-│   └── useAvatarUpload.ts     # 🔲 TODO — Supabase Storage upload hook
+│   ├── useUserPreferences.ts  # ✅ Working — TanStack Query read + upsert (optimistic) for user_preferences
+│   ├── useAvatarUpload.ts     # ✅ Working — Supabase Storage upload hook (validate + return public URL)
+│   ├── useStatusLabel.ts      # ✅ Working — resolver hook applying custom status labels over defaults
+│   └── useDeleteAccount.ts    # ✅ Working — clears storage → rpc('delete_user') → signOut → redirect
 ├── stores/
 │   ├── uiStore.ts             # ✅ Working — Zustand store for sidebar, view, filters, sort
-│   └── themeStore.ts          # 🔲 TODO — Zustand store with persist middleware for theme preference
+│   └── themeStore.ts          # ❌ Not built — chose next-themes instead (already wired to sonner; handles FOUC + system pref). See decision note below.
 ├── lib/
 │   ├── supabase.ts            # ✅ Working — singleton Supabase client
 │   ├── utils.ts               # ✅ Working — cn(), formatDate(), STATUS_LABEL, STATUS_COLOR, KANBAN_COLUMN_ORDER
-│   └── export.ts              # 🔲 TODO — CSV/JSON export utility functions
+│   └── export.ts              # ✅ Working — CSV (RFC-4180 escaping) / JSON export via Blob + getStatusLabel() also lives in utils.ts
 ├── types/
 │   ├── database.ts            # ✅ Hand-written types: Application, Contact, Activity, enums
 │   ├── supabase.ts            # ✅ Auto-generated from Supabase CLI
-│   └── preferences.ts         # 🔲 TODO — TypeScript types for user_preferences
+│   └── (preferences.ts)       # ❌ Not built — UserPreferences interface lives in database.ts instead (matches existing convention)
 ├── pages/
 │   ├── ApplicationsPage.tsx   # ✅ Working — Kanban/Table view, search, filters, pagination
 │   ├── DashboardPage.tsx      # ✅ Working — StatCards + all analytics charts
 │   ├── LoginPage.tsx          # ✅ Working — tabs for Sign In / Sign Up
-│   ├── SettingsPage.tsx       # 🔲 TODO — 4-section settings page (Profile, Appearance, Preferences, Data & Account)
+│   ├── SettingsPage.tsx       # ✅ Working — 4-section settings page (Profile, Appearance, Preferences, Data & Account)
 │   └── NotFoundPage.tsx       # ✅ Working — 404 page
 ├── App.tsx                    # ✅ Working — routes with ProtectedRoute, lazy-loaded Dashboard
 └── main.tsx                   # ✅ Working — QueryClient, BrowserRouter, Toaster providers
@@ -151,7 +153,7 @@ src/
 - `date` date (default: today)
 - `created_at` timestamptz
 
-**user_preferences** *(🔲 TODO — create via migration)*
+**user_preferences** *(✅ created — migration `20260618094112_add_user_preferences`; RLS + reuses `update_updated_at` trigger)*
 - `id` uuid PK (auto-generated)
 - `user_id` uuid FK → auth.users (unique — one row per user)
 - `display_name` text (nullable)
@@ -164,8 +166,11 @@ src/
 - `created_at` timestamptz (auto)
 - `updated_at` timestamptz (auto, trigger-updated)
 
-### Storage Buckets *(🔲 TODO)*
-- **avatars** — public read, authenticated upload, max 2MB, jpg/png/webp only
+### Storage Buckets *(✅ created — migration `20260618094114_add_avatars_storage`)*
+- **avatars** — public read, authenticated upload, max 2MB (`file_size_limit`), jpg/png/webp only (`allowed_mime_types`). RLS on `storage.objects` scopes writes to the user's own `<user_id>/` folder.
+
+### Database Functions *(✅)*
+- `public.delete_user()` — `SECURITY DEFINER` RPC (migration `20260620083343_add_delete_user_function`). Deletes `auth.users WHERE id = auth.uid()`; cascading FKs wipe all the caller's rows. `search_path = ''`, execute granted to `authenticated` only. Called by `useDeleteAccount`.
 
 ### Security
 - Row Level Security (RLS) enabled on all tables
@@ -202,11 +207,19 @@ src/
   - **Locked the version** so it can't regress: added `.nvmrc` (`22.12.0`) for local dev and `engines.node >= 22.12.0` in `package.json` for install/CI enforcement.
   - **Interview talking points:** (1) debugging a failure that lived in the *runtime/dependency* layer, not app code — read the actual error chain instead of guessing; (2) the CJS-vs-ESM `require(ESM)` interop change in Node 22.12; (3) why "just upgrade the package" was the wrong instinct here (latest versions still broken); (4) `.nvmrc` vs `engines` — dev-experience hint vs install-time contract — for reproducibility across machines and CI.
   - **How I found it (the story to tell):** AI's first suggestions were workarounds — switch to happy-dom, downgrade jsdom, or inline the dep. They worked but didn't feel like the *best* solution (each swaps or weakens a dependency to dodge the symptom). Instead of accepting the first fix, I questioned it and asked "why can't we just upgrade the version and see if it's already fixed?" Investigating that question surfaced the real root cause — a Node runtime gap, not a library bug — and the cleanest fix: a one-minor-version Node upgrade with zero code changes. **Lesson: don't accept the first workaround; push to understand the root cause, and the least-invasive fix often falls out of it.**
-- **SettingsPage.tsx is planned** — currently renders only a heading. Full implementation planned with 4 sections: Profile (avatar upload via Supabase Storage, display name), Appearance (theme switcher), Application Preferences (defaults + custom status labels), Data & Account (CSV/JSON export, delete account). See Settings Page Plan section below for full spec.
-- **MobileNav.tsx is an unused stub** — mobile navigation is actually implemented in Header.tsx via a Sheet; this file can be removed or implemented.
-- **next-themes** is installed but only consumed by the sonner wrapper — no theme switcher UI exists.
+- **Settings Page complete (2026-06-20)** — all 4 sections built on the `feature/settings` branch. Notable decisions / deviations from the original plan:
+  - **Adopted Supabase CLI (Day 0)** — migrated from Dashboard-managed schema to migrations-as-code: `supabase/migrations/` baseline + `user_preferences`, `avatars`, and `delete_user()` migrations; types auto-generated via `supabase gen types`.
+  - **Theme: used `next-themes`, not a custom Zustand `themeStore`** — it already powers the sonner wrapper and handles FOUC + system preference, so rolling our own would mean two sources of truth. ThemeSwitcher reads `useTheme()`.
+  - **`UserPreferences` type lives in `database.ts`**, not a separate `preferences.ts` (matches existing convention).
+  - **Custom status labels** resolve via `getStatusLabel()` (utils) + `useStatusLabel()` hook, wired into StatusBadge, KanbanColumn, ApplicationDetail, StatusChart, the ApplicationForm select, and the ApplicationsPage filter. KanbanBoardSkeleton intentionally left on defaults.
+  - **Delete account** uses the `delete_user()` SECURITY DEFINER RPC (no service_role on the client, no Edge Function); `useDeleteAccount` clears avatar storage first, then calls the RPC, then signs out.
+- **next-themes** now powers the theme switcher (previously only consumed by the sonner wrapper).
 
-> **Status:** The build passes (`pnpm build` green) and all core features are functional. Remaining items are the test-runner fix and the Settings page implementation.
+### ⚠️ Known Gaps / Outstanding
+- **MobileNav.tsx is an unused stub** — mobile navigation is actually implemented in Header.tsx via a Sheet; this file can be removed or implemented.
+- **Settings polish (optional)** — no explicit error states on the settings queries; PreferencesSection salary grid is `grid-cols-2` (could be `grid-cols-1 sm:grid-cols-2` on narrow screens); no tests yet for `export.ts` / `getStatusLabel` (good pure-function candidates).
+
+> **Status:** `pnpm build` green; tests pass (8 files / 18). Core features + full Settings page complete. Remaining: optional settings polish and MobileNav cleanup.
 
 ---
 
@@ -308,10 +321,10 @@ pnpm preview      # Preview production build
 
 ### Section 2: Appearance
 - Theme switcher: Light / Dark / System (3 options, radio group or segmented control)
-- Store preference in Zustand `themeStore` with `persist` middleware (localStorage)
-- Apply via Tailwind `dark:` class strategy (toggle `dark` class on `<html>`)
-- Respect `prefers-color-scheme` media query when "System" is selected
-- Note: `next-themes` is installed but consider replacing with custom Zustand approach for consistency
+- ✅ Built with **next-themes** (`attribute="class"`, `defaultTheme="system"`, `enableSystem`); persists to localStorage automatically
+- Applies via Tailwind `dark:` class strategy (next-themes toggles `dark` on `<html>`, matching `@custom-variant dark` in index.css)
+- Respects `prefers-color-scheme` when "System" is selected
+- Decision: kept **next-themes** rather than a custom Zustand store — it already drives the sonner wrapper and handles FOUC + system preference, so a custom store would mean two sources of truth
 
 ### Section 3: Application Preferences
 - Default location for new applications (text input)
@@ -334,9 +347,9 @@ pnpm preview      # Preview production build
   - `supabase gen types typescript --linked > src/types/supabase.ts` → auto-generate types instead of hand-maintaining them.
   - Workflow: `supabase migration new <name>` → write SQL → `supabase db push`. (Remote-direct chosen over local-first/Docker for a solo project; local Docker DB can be added later if needed.)
   - **Interview story:** migrating a Dashboard-managed project to a migrations-based, schema-as-code workflow — reproducibility, schema changes visible in PR diffs, automated type generation.
-- **Day 1:** Profile (avatar upload with Supabase Storage, display name) + Appearance (theme switcher with Zustand persist)
-- **Day 2:** Application Preferences (user_preferences migration, custom status labels, default values) + Data export (CSV/JSON)
-- **Day 3:** Danger Zone (delete account flow) + responsive layout + loading/error states + polish
+- **Day 1: ✅ done** — Profile (avatar upload with Supabase Storage, display name) + Appearance (theme switcher via next-themes)
+- **Day 2: ✅ done** — Application Preferences (defaults + "Use my defaults" button, custom status labels) + Data export (CSV/JSON)
+- **Day 3: ✅ done** — Danger Zone (delete account via `delete_user()` RPC). Remaining polish (responsive tweaks, query error states, tests) tracked under Known Gaps.
 
 ### Interview Talking Points from Settings Page
 - **Supabase Storage:** file upload flow — client-side validation, signed URLs, public bucket config
