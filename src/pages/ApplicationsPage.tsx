@@ -10,13 +10,14 @@ import { ApplicationForm } from '@/components/applications/ApplicationForm'
 
 import { Input } from '@/components/ui/input'
 import { APPLICATION_STATUSES } from "@/types/database"
-import { STATUS_LABEL } from "@/lib/utils"
+import { useStatusLabel } from '@/hooks/useStatusLabel'
 
 export default function ApplicationsPage() {
   const currentView = useUIStore((s) => s.currentView)
   const setView = useUIStore((s) => s.setView)
   const filters = useUIStore((s) => s.filters)
   const updateFilters = useUIStore((s) => s.updateFilters)
+  const getStatusLabel = useStatusLabel()
   const [isApplicationDialogOpen, setApplicationDialogOpen] = useState(false)
   const [editingApp, setEditingApp] = useState<Application | null>(null)
 
@@ -65,7 +66,7 @@ export default function ApplicationsPage() {
         >
           <option value="">All Status</option>
           {APPLICATION_STATUSES.map((s) => (
-            <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+            <option key={s} value={s}>{getStatusLabel(s)}</option>
           ))}
         </select>
       </div>

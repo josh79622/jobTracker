@@ -1,10 +1,12 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { useApplications } from '@/hooks/useApplications'
-import { STATUS_LABEL } from '@/lib/utils'
+import { useStatusLabel } from '@/hooks/useStatusLabel'
+import type { ApplicationStatus } from '@/types/database'
 
 const COLOURS = ['#6366f1', '#f59e0b', '#3b82f6', '#22c55e', '#ef4444', '#94a3b8']
 
 export function StatusChart() {
+  const getStatusLabel = useStatusLabel()
   const { data: applications = [] } = useApplications()
 
     const data = Object.entries(
@@ -13,7 +15,7 @@ export function StatusChart() {
         return acc
       }, {})
     ).map(([status, count]) => ({
-      name: STATUS_LABEL[status as keyof typeof STATUS_LABEL],
+      name: getStatusLabel(status as ApplicationStatus),
       value: count,
     }))
 
